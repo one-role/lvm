@@ -1,0 +1,41 @@
+---
+# Setup LVM PV-VG-LV, filesystem, mount and fstab
+
+- name: lvm:lvm_processor | create volume group {{ looplvm.value.vgname | mandatory }}
+  lvg:
+    pesize: "{{ looplvm.value.pesize | default(omit) }}"
+    pv_options: "{{ looplvm.value.pv_options | default(omit) }}"
+    pvs: "{{ looplvm.value.pvs | default(omit) }}"
+    vg: "{{ looplvm.value.vgname | mandatory }}"
+    vg_options: "{{ looplvm.value.vg_options | default(omit) }}"
+
+- name: lvm:lvm_processor | create logical volume {{ looplvm.value.vgname | mandatory }}
+  lvol:
+    vg: "{{ looplvm.value.vgname | mandatory }}"
+    lv: "{{ looplvm.key | mandatory }}"
+    size: "{{ looplvm.value.lvsize | default(omit) }}"
+    pvs: "{{ looplvm.value.pvs | default(omit) }}"
+    shrink: "{{ looplvm.value.shrink | default(False) }}"
+    opts: "{{ looplvm.value.lv_options | default(omit) }}"
+
+- name: lvm:lvm_processor | create {{ looplvm.value.filesystem | default('ext4') }} filesystem on {{ looplvm.key | mandatory }}
+  filesystem:
+    dev: "/dev/{{ looplvm.value.vgname | mandatory }}/{{ looplvm.key | mandatory }}"
+    fstype: "{{ looplvm.value.filesystem | default('ext4') }}"
+    resizefs: "{{ looplvm.value.resizefs | default(True) }}"
+    opts: "{{ looplvm.value.fs_options | default(omit) }}"
+
+- name: lvm:lvm_processor | ensure mount path {{ looplvm.value.lvmount | mandatory }} is a directory
+  file:
+    path: "{{ looplvm.value.lvmount | mandatory }}"
+    state: directory
+
+- name: lvm:lvm_processor | mount {{ looplvm.key }} on {{ looplvm.value.lvmount | mandatory }}
+  mount:
+    name: "{{ looplvm.value.lvmount | mandatory }}"
+    src: "/dev/{{ looplvm.value.vgname | mandatory }}/{{ looplvm.key }}"
+    dump: "{{ looplvm.value.dump | default('1') }}"
+    passno: "{{ looplvm.value.passno | default('2') }}"
+    fstype: "{{ looplvm.value.filesystem | default('ext4') }}"
+    opts: "{{ looplvm.value.mount_options | default(omit) }}"
+    state: mounted

@@ -1,0 +1,5 @@
+---
+# Should we set up LVM ?
+
+- include_tasks: lvm_init.yml
+  when: lvm_config is defined

@@ -1,0 +1,9 @@
+---
+# Setup LVM partitions
+
+# Loop over all lvms and define them
+- name: lvm | create logical volumes
+  include_tasks: lvm_processor.yml
+  loop: "{{ lvm_config | dict2items }}"
+  loop_control:
+    loop_var: looplvm
